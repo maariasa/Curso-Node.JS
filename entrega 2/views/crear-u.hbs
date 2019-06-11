@@ -1,0 +1,67 @@
+{{>header}}
+
+{{>links}}
+
+
+<!--
+comousuario  necesito  poder  ingresar  a  la  plataforma  utilizando  mis  credenciales  para
+poder visualizar los contenidos según mi rol
+Criterios de aceptación (LAS QUE FALTAN)
+
+Los usuarios con rol de aspirante solo pueden visualizar los cursos disponibles y optar por inscribirse en estos.
+(redirigir a una página para esto)
+Los usuarios con rol de coordinador pueden visualizar los cursos disponibles y cerrados.
+(redirigir a una página para esto)
+-Será la única historia que se menciona el rol de como usuario.
+
+-->
+
+<h3>Ingresa con el número de tu cuenta (No necesitas contraseña)</h3>
+<form action="/redirige" method="post">
+  <label for="id">
+    ID
+  </label>
+  <input type="number" name="id" required>
+  <br>
+  <button>Ingresar</button>
+</form>
+
+
+
+<h3>¿No tienes una cuenta? Regístrate</h3>
+<form action="/creado-u" method="post">
+  <label for="id">
+    ID
+  </label>
+  <input type="number" name="id" required>
+  <br>
+
+  <label for="nombre">
+    Nombre
+  </label>
+  <input type="text" name="nombre" required>
+  <br>
+
+  <label for="correo">
+    Correo Electrónico
+  </label>
+  <input type="email" name="correo" required>
+  <br>
+
+  <label for="telefono">
+    Teléfono
+  </label>
+  <input type="number" name="telefono" required>
+  <br>
+
+  <button>Registrar</button>
+</form>
+
+{{>footer}}
+
+<!--
+
+
+
+
+-->

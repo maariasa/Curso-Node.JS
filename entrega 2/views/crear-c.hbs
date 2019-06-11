@@ -1,0 +1,40 @@
+{{>header}}
+
+{{>links}}
+
+<script type="text/javascript">
+  const funciones = require('../src/helpers');
+
+</script>
+
+<h2>Ingrese los siguientes datos para crear un curso</h2>
+<form action="/creado-c" method="post">
+  <label for="nombre_curso">Nombre</label>
+  <input type="text" name="nombre_curso" value="" required>
+  <br>
+
+  <label for="id_curso">ID</label>
+  <input type="number" name="id_curso" value="" required>
+  <br>
+
+  <label for="descripcion">Descripción</label>
+  <input type="text" name="descripcion" value="" required>
+  <br>
+
+  <label for="valor">Costo</label>
+  <input type="number" name="valor" value="" required>
+  <br>
+
+  <label for="modalidad">Modalidad (opcional)</label>
+  <input type="text" name="modalidad" value="">
+  <br>
+
+  <label for="intensidad">Intensidad Horaria (opcional)</label>
+  <input type="number" name="intensidad" value="">
+  <br>
+
+  <button>Guardar</button>
+</form>
+
+
+{{>footer}}
