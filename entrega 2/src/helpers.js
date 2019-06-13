@@ -6,7 +6,6 @@ const fs = require('fs');
 /*Arreglos donde se almacenan los datos de los cursos y de los usuarios*/
 listaUsuarios = [];
 listaCursos = [];
-inscritosCursos = [];
 
 /*************************************************************
 HELPERS
@@ -15,7 +14,7 @@ HELPERS
 /*Helper que muestra los inscritos*/
 hbs.registerHelper('mostrarUsuarios', () => {
   listaUsuarios = require('../datos_inscritos.json');
-  let texto = "<table> \
+  let texto = "<table class='table'> \
   <thead> \
   <th> ID </th> \
   <th> Nombre </th>\
@@ -32,6 +31,31 @@ hbs.registerHelper('mostrarUsuarios', () => {
            "<td>" + usuario.correo + '</td>' +
            "<td>" + usuario.telefono + "</td>" +
            "<td>" + usuario.tipo + '</td></tr>';
+  });
+  texto = texto + "</tbody></table>"
+  return texto;
+});
+
+/*Helper que muestra los inscritos (version coordinador)*/
+hbs.registerHelper('mostrarUsuarios2', () => {
+  listaUsuarios = require('../datos_inscritos.json');
+  let texto = "<table class='table'> \
+  <thead> \
+  <th> ID </th> \
+  <th> Nombre </th>\
+  <th> Correo </th>\
+  <th> Telefono </th>\
+  <th> Tipo </th>\
+  </thead>\
+  <tbody>";
+  listaUsuarios.forEach(usuario => {
+    texto = texto +
+           "<tr>" +
+           "<td>" + usuario.id + '</td>' +
+           "<td>" + usuario.nombre + '</td>' +
+           "<td>" + usuario.correo + '</td>' +
+           "<td>" + usuario.telefono + "</td>" +
+           "<td>" + usuario.tipo + "</td></tr>";
   });
   texto = texto + "</tbody></table>"
   return texto;
@@ -62,8 +86,7 @@ hbs.registerHelper('mostrarCursos', () => {
              "<td>" + curso.valor + "</td>" +
              "<td>" + curso.modalidad + "</td>" +
              "<td>" + curso.intensidad + "</td>" +
-             "<td>" + curso.estado + "</td>" +
-             "<td>" + "<button onclick='{{borrarCurso curso.nombre_curso}}'>Eliminar</button>" + '</td></tr>';
+             "<td>" + curso.estado + '</td></tr>';
     });
     texto = texto + "</tbody></table>"
   return texto;
@@ -72,27 +95,37 @@ hbs.registerHelper('mostrarCursos', () => {
 /*Helper que muestra solamente los cursos disponibles*/
 hbs.registerHelper('mostrarCursosDisp', () => {
   listaCursos = require('../datos_cursos.json');
-  let texto = "<table> \
-  <thead> \
-  <th> Nombre </th>\
-  <th> Descripción </th>\
-  <th> Costo </th>\
-  </thead>\
-  <tbody>";
+  let texto = "<div class='accordion' id='accordionExample'>";
   dispo = listaCursos.filter(busco => busco.estado == 'disponible');
   if (dispo.length == listaCursos.length){
     texto = 'No hay cursos disponibles.';
   }
   else {
+    i = 1;
     dispo.forEach(curso => {
       texto = texto +
-             "<tr>" +
-             "<td>" + curso.nombre_curso + '</td>' +
-             "<td>" + curso.descripcion + '</td>' +
-             "<td>" + curso.valor + '</td></tr>';
-    });
-    texto = texto + "</tbody></table>";
+                `<div class="card">
+                <div class="card-header" id="heading${i}">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse${i}" aria-expanded="true" aria-controls="collapse${i}">
+                      ${curso.nombre_curso}<br>
+                      valor ${curso.valor} <br>
+                    </button>
+                  </h2>
+                </div>
+
+                <div id="collapse${i}" class="collapse" aria-labelledby="heading${i}" data-parent="#accordionExample">
+                  <div class="card-body">
+                   Descripcion: ${curso.descripcion} <br>
+                   Modalidad: ${curso.modalidad} <br>
+                   Intensidad horaria: ${curso.intensidad} <br>
+                  </div>
+                </div>`
+             i=i+1;
+    })
+    texto = texto + '</div>';
   }
+
   return texto;
 });
 
@@ -105,7 +138,8 @@ hbs.registerHelper('crearUsuario', (id_u, nombre_u, correo_u, telefono_u)=>{
     nombre: nombre_u,
     correo: correo_u,
     telefono: telefono_u,
-    tipo: 'aspirante'
+    tipo: 'aspirante',
+    cursos: []
   };
   let duplicado = listaUsuarios.find(busco => busco.id == id_u);
   let e_duplicado = listaUsuarios.find(busco => busco.correo == correo_u);
@@ -119,7 +153,7 @@ hbs.registerHelper('crearUsuario', (id_u, nombre_u, correo_u, telefono_u)=>{
     listaUsuarios.push(usuario);
     console.log(listaUsuarios);
     guardarUsuario();
-    mensaje = "El usuario se ha creado exitosamente";
+    mensaje = "El usuario se ha creado exitosamente.";
   }
   return mensaje;
 });
@@ -152,8 +186,30 @@ hbs.registerHelper('crearCurso', (id_c, nombre_c, descrip, costo, mod, inten)=>{
 });
 
 /*Helper que ingresa a un aspirante a un curso*/
-hbs.registerHelper('ingresarAspiranteCurso', ()=>{
+hbs.registerHelper('inscribirCurso', (nombre_c, id_u)=>{
+  listarU();
+  listarC();
   listarI();
+  let existe_c = listaCursos.find(busco => busco.nombre_curso == nombre_c);
+  let datos_u = listaUsuarios.find(busco => busco.id == id_u);
+  if (existe_c){
+    let curs = {
+      id_aspirante: datos_u.id,
+      nombre_aspirante: datos_u.nombre,
+      correo_aspirante: datos_u.correo,
+      telefono_aspirante: datos_u.telefono,
+      matriculado: true
+    };
+      listaCursos.inscritos.push(curs);
+      console.log(listaCursos);
+      guardarInscritos();
+      mensaje = "Se ha inscrito al curso exitosamente";
+
+  }
+  else{
+    mensaje = "El curso no existe. Por favor intente de nuevo."
+  }
+  /*
   let inscrito = {
     id_curso: id_c,
     nombre_curso: nombre_c,
@@ -173,8 +229,8 @@ hbs.registerHelper('ingresarAspiranteCurso', ()=>{
     console.log(listaCursos);
     guardarInscritosCurso();
     texto = "El curso se ha creado exitosamente";
-  }
-  return texto;
+  }*/
+  return mensaje;
 });
 
 /*Helper que permite eliminar un curso*/
@@ -189,6 +245,21 @@ hbs.registerHelper('borrarCurso', (nombre)=>{
     guardarCurso();
   }
 })
+
+hbs.registerHelper('eliminarUsuario', (id)=>{
+  listarU();
+  let encontre = listaUsuarios.filter(busco => busco.id != id);
+  if (encontre.length == listaUsuarios.length){
+    mensaje = "La ID ingresada no existe. Intentelo de nuevo."
+  }
+  else {
+    listaUsuarios = encontre;
+    guardarUsuario();
+    mensaje = "El usuario ha sido borrado con éxito."
+  }
+  return mensaje;
+});
+
 /*
 let eliminar = (nombre) => {
   listar();
@@ -205,26 +276,7 @@ let eliminar = (nombre) => {
 
 */
 
-/*Helper que redirige usuarios segun su tipo*/
-/*
-hbs.registerHelper('redireccionUsuario', (id, nombre)=>{
-  listarU();
-  let buscar = listaUsuarios.find(busco => busco.id == id);
-  if (buscar){
-    if (buscar.tipo == 'coordinador'){
-      mensaje = "The foe's " + nombre + "used Rage Powder!"
-    }
-    else{
-      mensaje = "Ur a scrub m8"
-    }
-  }
-  else {
-    mensaje = "Este ID no existe. Por favor verifique que se registró correctamente"
-  }
-  return mensaje;
 
-});
-*/
 
 
 /****************************************
@@ -252,9 +304,9 @@ let listarC = ()=>{
 /*Carga el archivo de inscritos*/
 let listarI = ()=>{
   try{
-    listaCursos = require('../cursos_inscritos.json');
+    listaCursos.inscritos = require('../cursos_inscritos.json');
   }catch(error){
-    inscritosCursos = [];
+    listaCursos.inscritos = [];
   }
 }
 
@@ -278,12 +330,31 @@ let guardarCurso = ()=>{
 
 /*Guarda los inscritos en cursos en un archivo*/
 let guardarInscritos = ()=>{
-  let datos = JSON.stringify(inscritosCursos);
+  let datos = JSON.stringify(listaCursos.inscritos);
   fs.writeFile('cursos_inscritos.json', datos, (err)=>{
     if (err) throw (err);
     console.log("Archivo de inscritos en cursos creado con exito");
   });
 };
+
+/**/
+let actualizarUsuario = (nombre, asignatura, calificacion) => {
+  listarU();
+  let encontre = listaEstudiantes.find(busco => busco.nombre == nombre);
+  if (encontre){
+    encontre[asignatura] = calificacion;
+    guardar();
+  }
+  else {
+    console.log("Ese tal " + nombre + " no existe");
+  }
+}
+
+
+
+module.exports = {
+  listarU
+}
 
 /*
 

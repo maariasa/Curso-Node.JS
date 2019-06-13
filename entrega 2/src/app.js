@@ -3,6 +3,7 @@ const app = express();
 const path = require('path');
 const hbs = require('hbs');
 const bodyParser = require('body-parser');
+const funciones = require('./helpers');
 require('./helpers');
 
 const directoriopublico = path.join(__dirname,'../public');
@@ -37,6 +38,23 @@ app.get('/inscritos', (req, res)=>{
 app.get('/cursos/', (req, res)=>{
   res.render('cursos');
 });
+app.get('/cursosDisp', (req, res)=>{
+  res.render('cursosDisp');
+});
+app.get('/inscripcion', (req, res)=>{
+  res.render('inscripcion');
+});
+app.get('/cancelacion', (req, res)=>{
+  res.render('cancelacion');
+});
+
+app.get('/hub_coordinador', (req, res)=>{
+  res.render('hub_coordinador');
+});
+
+app.get('/cursos_cord', (req, res)=>{
+  res.render('cursos_cord');
+});
 
 /*Muestra la página de usuario creado*/
 app.post('/creado-u', (req, res) => {
@@ -47,6 +65,7 @@ app.post('/creado-u', (req, res) => {
      telefono: req.body.telefono
    });
 });
+
 
 /*Muestra la página de curso creado*/
 app.post('/creado-c', (req, res) => {
@@ -60,7 +79,16 @@ app.post('/creado-c', (req, res) => {
    });
 });
 
+app.post('/inscrito_c', (req, res)=>{
+  res.render('inscrito_c', {
+    id_u: parseInt(req.body.id_u),
+    nombre_c: req.body.nombre_c
+  })
+});
+
+/*
 app.post('/redirige', (req,res)=>{
+  funciones.listarU();
   let ide = parseInt(req.body.id);
   let existe_id = listaUsuarios.find(busco => busco.id == ide);
 
@@ -70,15 +98,46 @@ app.post('/redirige', (req,res)=>{
       console.log("El coordinador será redirigido a los cursos completos");
       res.redirect('/cursos');
     }
-    else{
-      console.log("Estudiante será redirigido a...")
-      res.redirect('/');
-    }
   }
   else{
     console.log("Esta ID no existe");
+    res.redirect('/');
   }
 });
+*/
+
+app.get('/manejo_inscritos', (req, res)=>{
+  res.render('manejo_inscritos');
+});
+
+
+app.get('/editar_usuario', (req, res)=>{
+  res.render('editar_usuario');
+});
+
+
+app.post('/redirige', (req,res)=>{
+  funciones.listarU();
+  let ide = parseInt(req.body.id);
+  let encontre = listaUsuarios.find(busco => busco.id == ide);
+  if (encontre){
+    if (encontre.tipo == 'coordinador'){
+      console.log("El tipo es: " + encontre.tipo)
+      console.log("Es coordinador")
+      res.redirect('/hub_coordinador');
+    }
+    else{
+      console.log("Es " + encontre.tipo + " sera redirigido a")
+      res.render('redirige');
+    }
+  }
+  else{
+    console.log("Esta ID no exitste!!!")
+    res.redirect('/');
+  }
+});
+
+
 
 /*Muestra la página de error por default*/
 app.get('*', (req, res)=>{
@@ -90,6 +149,9 @@ app.get('*', (req, res)=>{
 app.listen(3000, ()=> {
   console.log("Escuchando en el Port 3000")
 });
+
+
+
 
 /*
 HISTORIA DE USUARIO #1

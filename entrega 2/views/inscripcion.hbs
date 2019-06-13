@@ -1,11 +1,13 @@
 {{>header}}
+{{>linka}}
 
-<h3>Bienvenido {{nombre}}</h3>
-
-<p>Eliga el curso en el que desea entrar</p>
-
-<form class="" action="index.html" method="post">
-  <button onclick="{{ingresarAspiranteCurso }}"></button>
+<p>Ingrese el curso en el que desea entrar. Y su ID nuevamente</p>
+<form class="" action="/inscrito_c" method="post">
+  <input type="text" name="nombre_c" placeholder="Nombre del curso...">
+  <br>
+  <input type="number" name="id_u" placeholder="ID...">
+  <button>Ingresar</button>
 </form>
+
 
 {{>footer}}
