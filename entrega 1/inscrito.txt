@@ -1,8 +1,0 @@
---DATOS DE LA PERSONA INSCRITA--
-Nombre: Mateo
-Cédula: 12345
---CURSO INSCRITO--
-ID: 2
-Nombre del curso: Curso Angular
-Duracion: 48
-Valor: 120000

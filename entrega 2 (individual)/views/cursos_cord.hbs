@@ -1,0 +1,32 @@
+{{>header}}
+
+
+<br>
+<h3>Aquí puede manejar la información de los cursos y sus inscritos</h3>
+
+<h4>Datos de los cursos</h4>
+<br>
+
+{{{mostrarCursos}}}
+
+<br>
+<br>
+
+<form action="/crear-c" method="get">
+  <button>Crear Curso</button>
+</form>
+<br>
+<br>
+{{>eliminar_usuario}}
+<br>
+<br>
+{{>editar_curso}}
+<br>
+<br>
+<hr>
+<form action="/hub_coordinador" method="get">
+  <button>Regresar</button>
+</form>
+
+
+{{>footer}}

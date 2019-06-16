@@ -4,8 +4,8 @@ const hbs = require('hbs');
 const fs = require('fs');
 
 /*Arreglos donde se almacenan los datos de los cursos y de los usuarios*/
-listaUsuarios = [];
-listaCursos = [];
+listaUsuarios =require('../datos_inscritos.json');
+listaCursos = require('../datos_cursos.json');;
 
 /*************************************************************
 HELPERS
@@ -36,35 +36,51 @@ hbs.registerHelper('mostrarUsuarios', () => {
   return texto;
 });
 
-/*Helper que muestra los inscritos (version coordinador)*/
-hbs.registerHelper('mostrarUsuarios2', () => {
-  listaUsuarios = require('../datos_inscritos.json');
-  let texto = "<table class='table'> \
-  <thead> \
-  <th> ID </th> \
-  <th> Nombre </th>\
-  <th> Correo </th>\
-  <th> Telefono </th>\
-  <th> Tipo </th>\
-  </thead>\
-  <tbody>";
-  listaUsuarios.forEach(usuario => {
-    texto = texto +
-           "<tr>" +
-           "<td>" + usuario.id + '</td>' +
-           "<td>" + usuario.nombre + '</td>' +
-           "<td>" + usuario.correo + '</td>' +
-           "<td>" + usuario.telefono + "</td>" +
-           "<td>" + usuario.tipo + "</td></tr>";
-  });
-  texto = texto + "</tbody></table>"
-  return texto;
-});
 
+/*Helper que crea la lista de cursos para realizar inscripcion*/
+hbs.registerHelper('mostrarCursosInscribir', () => {
+  let texto ="";
+  dispo = listaCursos.filter(busco => busco.estado == 'disponible');
+    if (dispo.length == listaCursos.length){
+      texto = 'No hay cursos disponibles.';
+    }
+    else {
+    dispo.forEach(curso=>{
+      texto=texto+"<option>"+curso.nombre_curso+"</option>"
+    })
+    }
+
+    return texto;
+  });
+
+
+  /*Helper que crea la lista de cursos para realizar cancelacion*/
+  hbs.registerHelper('mostrarCursosCancelar', (id) => {
+    let texto ="";
+    dispo = listaUsuarios.find(busco => busco.id == id);
+    if(dispo.cursos.length){
+      texto=`<h3>Bienvenido</h3>
+
+      <form action="/cancelado-a" method="post">
+
+          <label for="opcion">Elija el curso que desea cancelar</label>
+          <select multiple class="form-control" name="opcion">  `
+    dispo.cursos.forEach(curso=>{
+      texto=texto+"<option>"+listaCursos.find(busco =>busco.id_curso==curso).nombre_curso+"</option>"
+    })
+  texto=texto+`</select> <input input type="hidden" name="id" value=${id} >
+  <button>Aceptar</button>
+  </form>`}
+    else{
+      texto="<h2>Usted no tiene cursos inscritos</h2>"
+    }
+      return texto;
+    });
 
 
 /*Helper que muestra los cursos disponibles*/
 hbs.registerHelper('mostrarCursos', () => {
+  let i = 0
   listaCursos = require('../datos_cursos.json');
   let texto = "<table> \
   <thead> \
@@ -75,9 +91,11 @@ hbs.registerHelper('mostrarCursos', () => {
   <th> Modalidad </th>\
   <th> Intensidad Horaria </th>\
   <th> Estado </th>\
+  <th> Inscritos (Por ID) </th>\
   </thead>\
   <tbody>";
-  listaCursos.forEach(curso => {
+  dispo = listaCursos.filter(busco => busco.estado == 'disponible');
+  dispo.forEach(curso => {
       texto = texto +
              "<tr>" +
              "<td>" + curso.id_curso + '</td>' +
@@ -86,7 +104,13 @@ hbs.registerHelper('mostrarCursos', () => {
              "<td>" + curso.valor + "</td>" +
              "<td>" + curso.modalidad + "</td>" +
              "<td>" + curso.intensidad + "</td>" +
-             "<td>" + curso.estado + '</td></tr>';
+             "<td>" + curso.estado + '</td>';
+             for (i=0; i < curso.inscritos.length; i++){
+               texto = texto +
+               "<td>" + curso.inscritos[i] + "</td>";
+             }
+             texto = texto +
+             "</tr>"
     });
     texto = texto + "</tbody></table>"
   return texto;
@@ -109,7 +133,7 @@ hbs.registerHelper('mostrarCursosDisp', () => {
                   <h2 class="mb-0">
                     <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse${i}" aria-expanded="true" aria-controls="collapse${i}">
                       ${curso.nombre_curso}<br>
-                      valor ${curso.valor} <br>
+                      Valor: ${curso.valor} <br>
                     </button>
                   </h2>
                 </div>
@@ -169,7 +193,8 @@ hbs.registerHelper('crearCurso', (id_c, nombre_c, descrip, costo, mod, inten)=>{
     valor: costo,
     modalidad: mod,
     intensidad: inten,
-    estado: 'disponible'
+    estado: 'disponible',
+    inscritos: []
   };
   let duplicado = listaCursos.find(busco => busco.id_curso == id_c);
   if (duplicado){
@@ -186,52 +211,51 @@ hbs.registerHelper('crearCurso', (id_c, nombre_c, descrip, costo, mod, inten)=>{
 });
 
 /*Helper que ingresa a un aspirante a un curso*/
-hbs.registerHelper('inscribirCurso', (nombre_c, id_u)=>{
+hbs.registerHelper('inscribirCurso', (id_a,nombre_c)=>{
   listarU();
   listarC();
   listarI();
-  let existe_c = listaCursos.find(busco => busco.nombre_curso == nombre_c);
-  let datos_u = listaUsuarios.find(busco => busco.id == id_u);
-  if (existe_c){
-    let curs = {
-      id_aspirante: datos_u.id,
-      nombre_aspirante: datos_u.nombre,
-      correo_aspirante: datos_u.correo,
-      telefono_aspirante: datos_u.telefono,
-      matriculado: true
-    };
-      listaCursos.inscritos.push(curs);
-      console.log(listaCursos);
-      guardarInscritos();
-      mensaje = "Se ha inscrito al curso exitosamente";
+  let curso = listaCursos.find(busco => busco.nombre_curso == nombre_c);
+  let usuario = listaUsuarios.find(busco => busco.id == id_a);
+  let esta=curso.inscritos.find(busco=>busco==id_a);
+  if(esta) return  "<h2>el usuario ya esta inscrito en ese curso</h2>"
+  curso.inscritos.push(parseInt(id_a));
+  usuario.cursos.push(curso.id_curso);
+  guardarCurso();
+  guardarUsuario();
 
-  }
-  else{
-    mensaje = "El curso no existe. Por favor intente de nuevo."
-  }
-  /*
-  let inscrito = {
-    id_curso: id_c,
-    nombre_curso: nombre_c,
-    nombre_u: descrip,
-    id_u: a,
-    correo_u: x,
-    telefono: y,
-    matriculado: true
-  };
-  let duplicado = listaCursos.find(busco => busco.id_curso == id_c);
-  if (duplicado){
-    console.log("La ID de este curso ya existe en la base. Intentelo de nuevo");
-    texto = "La ID de este curso ya existe en la base. Intentelo de nuevo";
-  }
-  else{
-    listaCursos.push(curso);
-    console.log(listaCursos);
-    guardarInscritosCurso();
-    texto = "El curso se ha creado exitosamente";
-  }*/
-  return mensaje;
-});
+ return  "<h2>usuario inscrito</h2>";
+  });
+
+  /*Helper que cancela la inscripcion de aspirante a un curso*/
+hbs.registerHelper('cancelarInscripcion', (id_a,nombre_c)=>{
+  listarU();
+  listarC();
+  listarI();
+  let curso = listaCursos.find(busco => busco.nombre_curso == nombre_c);
+  let usuario = listaUsuarios.find(busco => busco.id == id_a);
+  console.log(id_a);
+  console.log(nombre_c);
+  curso.inscritos.splice(curso.inscritos.indexOf(id_a));
+  usuario.cursos.splice(usuario.cursos.indexOf(curso.id_curso));
+  texto="<h2>Curso cancelado</h2>";
+  guardarCurso();
+  guardarUsuario();
+  if(usuario.cursos.length>0){
+  texto=texto+`<form>
+
+  <label for="op">Estos son los cursos en los que aun esta inscrito</label>
+  <select multiple class="form-control" name="op" >  `
+usuario.cursos.forEach(curso=>{
+texto=texto+"<option>"+listaCursos.find(busco =>busco.id_curso==curso).nombre_curso+"</option>"
+})
+texto=texto+"</select> </form>";
+  }else{texto= texto+"<h2>No esta inscrito en mas cursos</h2>"}
+
+ return  texto;
+  });
+
+
 
 /*Helper que permite eliminar un curso*/
 hbs.registerHelper('borrarCurso', (nombre)=>{
@@ -246,19 +270,46 @@ hbs.registerHelper('borrarCurso', (nombre)=>{
   }
 })
 
-hbs.registerHelper('eliminarUsuario', (id)=>{
+/*Helper que permite eliminar la inscripcion de un aspirante (ver. coordinador)*/
+hbs.registerHelper('cancelarInscripcion2', (id_u, id_c)=>{
   listarU();
-  let encontre = listaUsuarios.filter(busco => busco.id != id);
-  if (encontre.length == listaUsuarios.length){
-    mensaje = "La ID ingresada no existe. Intentelo de nuevo."
-  }
-  else {
-    listaUsuarios = encontre;
+  listarC();
+  listarI();
+  let curso = listaCursos.find(busco => busco.id_curso == id_c);
+  let usuario = listaUsuarios.find(busco => busco.id == id_u);
+  if (curso && usuario){
+    curso.inscritos.splice(curso.inscritos.indexOf(id_u));
+    usuario.cursos.splice(usuario.cursos.indexOf(curso.id_curso));
+    texto = "<h3><b>Curso cancelado exitosamente. Aquí se muestran los datos de los que aún están inscritos.</b></h3>"
+    guardarCurso();
     guardarUsuario();
-    mensaje = "El usuario ha sido borrado con éxito."
+    texto = texto + mostrarAspirantes(id_c);
+  }
+  else{
+    texto = 'El curso y/o usuario no existe. Por favor intentelo de nuevo.'
+  }
+  return texto;
+});
+
+/*
+hbs.registerHelper('eliminarInscripcion', (id_u, nombre_c)=>{
+  listarU();
+  listarC();
+  let curso = listaCursos.find(busco => busco.nombre_curso == nombre_c);
+  let usuario = listaUsuarios.find(busco => busco.id == id_u);
+  if (curso && usuario){
+    let encontre = listaCursos.filter(busco => busco.inscritos != id_u);
+    let encontre2 = listaUsuarios.filter(busco => busco.cursos != id_u);
+    listaUsuarios = encontre;
+    guardarCurso();
+    mensaje = "Inscripcion cancelada exitosamente."
+  }
+  else{
+    mensaje = "No existe el curso y/o el usuario. Intentelo de nuevo."
   }
   return mensaje;
 });
+*/
 
 /*
 let eliminar = (nombre) => {
@@ -272,9 +323,23 @@ let eliminar = (nombre) => {
     guardar();
   }
 }
-
-
 */
+
+/*Helper que permite editar el estado de un curso*/
+hbs.registerHelper('cambiarEstadoCurso', (id_c, estado) => {
+  listarC();
+  let encontre = listaCursos.find(busco => busco.id_curso == id_c);
+  if (encontre){
+    encontre.estado = estado;
+    guardarCurso();
+    texto = "El estado del curso ha sido cambiado exitosamente";
+  }
+  else {
+    texto = "Este curso no existe. Por favor intentelo de nuevo.";
+  }
+  return texto;
+});
+
 
 
 
@@ -337,52 +402,36 @@ let guardarInscritos = ()=>{
   });
 };
 
-/**/
-let actualizarUsuario = (nombre, asignatura, calificacion) => {
+/*Muestra los aspirantes después de borrar un curso*/
+let mostrarAspirantes = (id_c)=>{
+  listarC();
   listarU();
-  let encontre = listaEstudiantes.find(busco => busco.nombre == nombre);
-  if (encontre){
-    encontre[asignatura] = calificacion;
-    guardar();
+  i = 0;
+  let texto = "<table class='table'> \
+  <thead> \
+  <th> ID </th> \
+  <th> Nombre </th>\
+  <th> Correo </th>\
+  <th> Telefono </th>\
+  </thead>\
+  <tbody>";
+  let curso_especifico = listaCursos.find(busco => busco.id_curso == id_c);
+  for (i=0; i<curso_especifico.inscritos.length; i++){
+    let id_a_buscar = curso_especifico.inscritos[i];
+    let encontre = listaUsuarios.find(busco => busco.id == id_a_buscar);
+    texto = texto +
+           "<tr>" +
+           "<td>" + encontre.id + '</td>' +
+           "<td>" + encontre.nombre + '</td>' +
+           "<td>" + encontre.correo + '</td>' +
+           "<td>" + encontre.telefono + "</td></tr>";
   }
-  else {
-    console.log("Ese tal " + nombre + " no existe");
-  }
-}
+  texto = texto + "</tbody></table>"
+  return texto;
 
+}
 
 
 module.exports = {
   listarU
 }
-
-/*
-
-
-
-
-
-hbs.registerHelper('listar', () => {
-  listaEstudiantes = require('./listado.json');
-  let texto = "<table> \
-  <thead> \
-  <th> Nombre </th> \
-  <th> Matematicas </th>\
-  <th> Ingles </th>\
-  <th> Programacion </th>\
-  </thead>\
-  <tbody>";
-  listaEstudiantes.forEach(estudiante => {
-    texto = texto +
-           "<tr>" +
-           "<td>" + estudiante.nombre + '</td>' +
-           "<td>" + estudiante.matematicas + '</td>' +
-           "<td>" + estudiante.ingles + '</td>' +
-           "<td>" + estudiante.programacion + '</td></tr>';
-  });
-  texto = texto + "</tbody></table>"
-  return texto;
-});
-
-
-*/

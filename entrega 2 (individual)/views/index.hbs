@@ -1,0 +1,26 @@
+{{>header}}
+
+{{>links}}
+
+    <h2>Esta es la pagina principal. </h2>
+    <br>
+    <b><h3>Instrucciones de uso de la App/página</h3></b>
+    <br>
+    <ul>
+      <li>Para ejecutar la App, hay que usar el comando <i>nodemon src/app.js -e js/hbs</i> en la carpeta raíz de la App</li>
+      <li>Para utilizar el sistema, ingrese a la pestaña "Ingreso".</li>
+      <li>Podrá ingresar como Coordinador usando la ID número 1 (El usuario tipo "Coordinador" está creado por default en el JSON). En caso de no existir más usuarios en el sistema, ingrese en la pestaña "Ingreso" para crear un usuario. Este será creado de tipo Aspirante.
+      </li>
+      <li>
+        Al ingresar como Coordinador, podrá manejar los datos de los cursos y
+        de los inscritos a los cursos (Crear, editar, eliminar).
+      </li>
+      <li>
+        Al ingresar como Aspirante, podrá ver, inscribir y/o cancelar los cursos disponibles.
+      </li>
+      <li>
+        <b>NOTA: </b>El botón "Cerrar Sesion" no cierra ninguna sesión o utiliza tokens, sólo redirige a esta página.
+      </li>
+    </ul>
+
+{{>footer}}

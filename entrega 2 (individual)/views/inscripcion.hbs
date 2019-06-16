@@ -1,0 +1,13 @@
+{{>header}}
+{{>linka}}
+<h3>Bienvenido </h3>
+<form action="/inscrito-a" method="post">
+
+    <label for="opcion">Elija el curso que desea inscribir</label>
+    <select multiple class="form-control" name="opcion">
+     {{{mostrarCursosInscribir}}}
+    </select>
+<input input type="hidden" name="id" value={{id}} >
+<button>aceptar</button>
+</form>
+{{>footer}}
